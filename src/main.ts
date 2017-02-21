@@ -1,66 +1,121 @@
 window.onload = () => {
 
     var c = document.getElementById("mycanvas") as HTMLCanvasElement
-    var cxt = c.getContext("2d");
+    var context = c.getContext("2d");
+
     var stage = new DisplayObjectContainer();
+    stage.alpha = 0.5
 
     var bitmap = new Bitmap();
-    bitmap.Img.src = "aa.png"
+    bitmap.setSrc("aa.png");
     bitmap.x = 100;
     bitmap.y = 100;
+    bitmap.alpha = 0.5
+    bitmap.rotation = 30;
+
     stage.addChild(bitmap);
-    stage.draw(cxt);
+
+    bitmap.scaleX = 0.5;
+    
 
     setInterval(() => {
         bitmap.x += 10;
-        cxt.clearRect(0, 0, 500, 500);
-        stage.draw(cxt);
-    }, 500)
+        context.setTransform(1, 0, 0, 1, 0, 0);
+        context.clearRect(0, 0, 500, 500);
+        stage.draw(context);
 
+    }, 500)
 
 };
 
 interface Drawable {
     draw(context: CanvasRenderingContext2D);
+
 }
 
-class DisplayObjectContainer implements Drawable {
 
-    x: number = 0;
-    y: number = 0;
+class DisplayObject implements Drawable {
+    x = 0;
+    y = 0;
+    alpha = 1;
+    protected globalAlpha = 1;
 
-    CanvasArray: DisplayObjectContainer[] = [];
+    scaleX = 1;
+    scaleY = 1;
+    rotation = 0;
 
-    addChild(newContext: DisplayObjectContainer) {
-        this.CanvasArray.push(newContext);
-    }
+    matrix = new math.Matrix(1, 0, 0, 1, 0, 0);
+    protected globalMatrix = new math.Matrix(1, 0, 0, 1, 0, 0);
+
+    parent: DisplayObjectContainer = null;
 
     draw(context: CanvasRenderingContext2D) {
+        this.matrix.updateFromDisplayObject(this.x, this.y, this.scaleX, this.scaleY, this.rotation);
 
+        if (this.parent) {
+            this.globalAlpha = this.parent.globalAlpha * this.alpha;
+            this.globalMatrix = math.matrixAppendMatrix(this.parent.globalMatrix, this.matrix);//this.parent.globalMatrix * this.matrix;
+        } else {
+            this.globalAlpha = this.alpha;
+            this.globalMatrix = this.matrix;
+
+        }
+        context.globalAlpha = this.globalAlpha;
+        var gMatrix = this.globalMatrix;
+        context.setTransform(gMatrix.a, gMatrix.b, gMatrix.c, gMatrix.d, gMatrix.tx, gMatrix.ty);
+        this.render(context);
+
+    }
+
+    render(context: CanvasRenderingContext2D) { }
+}
+
+class DisplayObjectContainer extends DisplayObject {
+    CanvasArray: DisplayObject[] = [];
+
+    addChild(newObject: DisplayObject) {
+        this.CanvasArray.push(newObject);
+        newObject.parent = this;
+    }
+
+    removeChild(displayObject: DisplayObject) {
+        var copyArray = this.CanvasArray
+        for (let arrayobject of this.CanvasArray) {
+            if (arrayobject == displayObject) {
+                var objectIndex = this.CanvasArray.indexOf(arrayobject);
+                copyArray.splice(objectIndex, 1);
+                break;
+            }
+        }
+        this.CanvasArray = copyArray;
+    }
+
+    render(context: CanvasRenderingContext2D) {
         for (let c of this.CanvasArray) {
             c.draw(context);
         }
     }
 }
 
-class Bitmap extends DisplayObjectContainer {
-    Img = new Image();
-    draw(context: CanvasRenderingContext2D) {
-        if (!this.Img.onload) {
-            this.Img.onload = () => {
-                context.drawImage(this.Img, this.x, this.y);
-            }
+class Bitmap extends DisplayObject {
+    private Img = new Image();
+    private isLoaded = false;
+    setSrc(src: string) {
+        this.Img.src = src;
+        this.Img.onload = () => {
+            this.isLoaded = true;
         }
-        context.drawImage(this.Img, this.x, this.y);
     }
+    render(context: CanvasRenderingContext2D) {
+        if (this.isLoaded) {
+            context.drawImage(this.Img, 0, 0);
+        } else {
+            this.Img.onload = () => {
+                context.drawImage(this.Img, 0, 0);
+            }
+            this.isLoaded = true;
+        }
+    }
+
 }
 
-class TextField extends DisplayObjectContainer {
-    text: string = "space";
-
-    draw(context: CanvasRenderingContext2D) {
-        var textField = new TextField();
-
-        context.fillText(this.text, this.x, this.y);
-    }
-}
