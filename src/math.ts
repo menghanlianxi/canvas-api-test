@@ -69,10 +69,35 @@ module math {
     var DEG_TO_RAD: number = Math.PI / 180;
 
 
+    export class Rectangle {
+        x: number;
+        y: number;
+        height: number;
+        width: number;
 
-         ////     a   b   tx
-         ////     c   d   ty
-         ////     0   0   1
+        constructor(x: number = 0, y: number = 0, high: number = 0, width: number = 0) {
+            this.x = x;
+            this.y = y;
+            this.height = high;
+            this.width = width;
+        }
+
+        isPointInRectangle(point: math.Point) {
+            if (point.x >= this.x &&
+                point.x <= this.x + this.width &&
+                point.y >= this.y &&
+                point.y <= this.y + this.height) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        
+    }
+
+    ////     a   b   tx
+    ////     c   d   ty
+    ////     0   0   1
     export class Matrix {
 
         constructor(a: number = 1, b: number = 0, c: number = 0, d: number = 1, tx: number = 0, ty: number = 0) {

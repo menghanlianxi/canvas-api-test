@@ -56,6 +56,31 @@ var math;
     var PacPI = PI + HalfPI;
     var TwoPI = PI * 2;
     var DEG_TO_RAD = Math.PI / 180;
+    var Rectangle = (function () {
+        function Rectangle(x, y, high, width) {
+            if (x === void 0) { x = 0; }
+            if (y === void 0) { y = 0; }
+            if (high === void 0) { high = 0; }
+            if (width === void 0) { width = 0; }
+            this.x = x;
+            this.y = y;
+            this.height = high;
+            this.width = width;
+        }
+        Rectangle.prototype.isPointInRectangle = function (point) {
+            if (point.x >= this.x &&
+                point.x <= this.x + this.width &&
+                point.y >= this.y &&
+                point.y <= this.y + this.height) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        };
+        return Rectangle;
+    }());
+    math.Rectangle = Rectangle;
     ////     a   b   tx
     ////     c   d   ty
     ////     0   0   1
